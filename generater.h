@@ -1,19 +1,17 @@
 #ifndef GENERATER_H
 #define GENERATER_H
 
-#include <QObject>
+#include <QString>
 
-class generater : public QObject
+class Generater
 {
-    Q_OBJECT
 public:
-    explicit generater(QObject *parent = 0);
+    Generater();
+    QString generate(QString arg);
 
-signals:
-    void generated();
-    void generatingPercent();
-public slots:
+private:
 
 };
+
 
 #endif // GENERATER_H

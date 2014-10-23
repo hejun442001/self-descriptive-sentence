@@ -1,6 +1,12 @@
 #include "generater.h"
 
-generater::generater(QObject *parent) :
-    QObject(parent)
+Generater::Generater()
 {
+
+}
+
+QString Generater::generate(QString arg)
+{
+    QString result=arg;
+    return result;
 }
