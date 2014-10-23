@@ -8,8 +8,7 @@ class Generater
 public:
     Generater();
     QString generate(QString arg);
-
-private:
+    QString numberToText(int);
 
 };
 

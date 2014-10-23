@@ -8,6 +8,7 @@ MainWindow::MainWindow(QWidget *parent) :
     gen(new Generater)
 {
     ui->setupUi(this);
+
 }
 
 MainWindow::~MainWindow()
@@ -18,6 +19,10 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_genButton_clicked()
 {
+    ui->genButton->setText("生成中……");
+    ui->genButton->setEnabled(false);
     QString text=gen->generate(ui->inputText->toPlainText());
     ui->outputText->setText(text);
+    ui->genButton->setText("生成");
+    ui->genButton->setEnabled(true);
 }
