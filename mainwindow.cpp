@@ -5,7 +5,7 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    gen(new Generater)
+    gen(new Generator)
 {
     ui->setupUi(this);
 

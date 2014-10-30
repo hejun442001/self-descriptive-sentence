@@ -1,12 +1,29 @@
-#include "generater.h"
+#include "generator.h"
 
-Generater::Generater()
+QString Generator::generate(QString leadingText)
 {
+    table.clear();
+    buffer.clear();
+    deadlocked = false;
+    QString result = leadingText;
+    addBuffer(result);
+    result = buffer;
 
+    return result;
 }
 
+void Generator::addBuffer(QString text)
+{
+    int loop, len = text.length();
+    for (loop = 0; loop < len; ++loop) {
+        QChar ch = text[loop];
+        ushort chid = ch.unicode();
+        if (0x3200 < chid && chid < 0x9fff)
+            buffer.append(ch);
+    }
+}
 
-QString Generater::numberToText(int n)
+QString Generator::numberToText(int n)
 {
 
     const QString numberName = "零一二三四五六七八九";
@@ -48,11 +65,13 @@ QString Generater::numberToText(int n)
     return result;
 }
 
-QString Generater::generate(QString arg)
-{
-    // @TODO: Finish it
-    QString result = numberToText(arg.toInt());
+Generator::Generator() {
+    templateLeadingLines.append(QString("在这句话中"));
+    templateLeadingLines.append("本句中");
+    templateLeadingLines.append("在此句中");
 
-
-    return result;
+    templateLines.append("共有%1个汉字");
+    templateLines.append("总计%1个汉字");
+    templateLines.append("一共有%1个字");
 }
+

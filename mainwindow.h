@@ -2,8 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "generater.h"
 #include <QString>
+#include "generator.h"
 
 namespace Ui {
 class MainWindow;
@@ -22,7 +22,7 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    Generater *gen;
+    Generator *gen;
 
 };
 
