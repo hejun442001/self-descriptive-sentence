@@ -1,15 +1,32 @@
 #include "generator.h"
 
-QString Generator::generate(QString leadingText)
+void Generator::generate(QString leadingText)
 {
     table.clear();
     buffer.clear();
     deadlocked = false;
-    QString result = leadingText;
-    addBuffer(result);
-    result = buffer;
+    charCounter = 0;
+    if (leadingText.isEmpty()) {
+        leadingText = templateLeadingLines[qrand()];
+    }
+    QString appendText = templateLines[qrand()];
 
-    return result;
+    addBuffer(leadingText);
+    addBuffer(appendText);
+
+    while (!buffer.isEmpty()) {
+
+    }
+
+    QStringList result;
+    QMetaObject::invokeMethod(sigSender, "resultFeedback",
+                              Q_ARG(QString, result));
+}
+
+bool Generator::isCharChineseLatter(QChar ch)
+{
+    ushort chid = ch.unicode();
+    return (0x3200 < chid && chid < 0x9fff);
 }
 
 void Generator::addBuffer(QString text)
@@ -17,8 +34,7 @@ void Generator::addBuffer(QString text)
     int loop, len = text.length();
     for (loop = 0; loop < len; ++loop) {
         QChar ch = text[loop];
-        ushort chid = ch.unicode();
-        if (0x3200 < chid && chid < 0x9fff)
+        if (isCharChineseLatter(ch))
             buffer.append(ch);
     }
 }
@@ -65,13 +81,14 @@ QString Generator::numberToText(int n)
     return result;
 }
 
-Generator::Generator() {
-    templateLeadingLines.append(QString("在这句话中"));
-    templateLeadingLines.append("本句中");
-    templateLeadingLines.append("在此句中");
+Generator::Generator() : QThread() 
+{
+        templateLeadingLines.append(QString("在这句话中"));
+        templateLeadingLines.append("本句中");
+        templateLeadingLines.append("在此句中");
 
-    templateLines.append("共有%1个汉字");
-    templateLines.append("总计%1个汉字");
-    templateLines.append("一共有%1个字");
+        templateLines.append("共有%1个汉字");
+        templateLines.append("总计%1个汉字");
+        templateLines.append("一共有%1个字");
 }
 

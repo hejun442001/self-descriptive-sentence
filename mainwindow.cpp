@@ -4,8 +4,7 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    gen(new Generator)
+    ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
@@ -14,14 +13,17 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
-    delete gen;
 }
 
 void MainWindow::on_genButton_clicked()
 {
     ui->genButton->setText("生成中……");
     ui->genButton->setEnabled(false);
-    QString text=gen->generate(ui->inputText->toPlainText());
+    emit generateRequest(ui->inputText->toPlainText());
+}
+
+void MainWindow::resultFeedback(QString text)
+{
     ui->outputText->setText(text);
     ui->genButton->setText("生成");
     ui->genButton->setEnabled(true);

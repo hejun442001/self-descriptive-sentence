@@ -17,13 +17,17 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+signals:
+    void generateRequest(QString);
+
 private slots:
     void on_genButton_clicked();
 
+public slots:
+    void resultFeedback(QString text);
+
 private:
     Ui::MainWindow *ui;
-    Generator *gen;
-
 };
 
 #endif // MAINWINDOW_H
