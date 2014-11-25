@@ -22,7 +22,7 @@ void MainWindow::on_genButton_clicked()
     emit generateRequest(ui->inputText->toPlainText());
 }
 
-void MainWindow::resultFeedback(QString text)
+void MainWindow::resultReceived(QString text)
 {
     ui->outputText->setText(text);
     ui->genButton->setText("生成");

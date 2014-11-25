@@ -8,7 +8,7 @@
 #include <QChar>
 
 
-class Generator : public QThread
+class Generator : public QObject
 {
     Q_OBJECT
 
@@ -18,18 +18,30 @@ public:
 public slots:
     void generate(QString leadingText);
 
+signals:
+    void resultFeedback(QString);
+
 private:
     void addBuffer(QString);
+    void addString(QString);
+    void delString();
     QString numberToText(int);
     inline bool isCharChineseLatter(QChar);
 
-    QString buffer;
-    bool deadlocked;
-    QMap<QChar,int> table;
     int charCounter;
+    QString buffer;
+    QChar addingChar;
+    int addingCharCounter;
+    QString deletingString;
 
+    typedef QMap<QChar,int>::iterator TableIterator;
+    QMap<QChar,int> table;
+
+    QChar unitChar;
     QStringList templateLeadingLines;
     QStringList templateLines;
+    QString templateCountingLine;
+    QString templateDetails;
 
 };
 

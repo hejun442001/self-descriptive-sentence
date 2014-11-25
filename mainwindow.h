@@ -24,7 +24,7 @@ private slots:
     void on_genButton_clicked();
 
 public slots:
-    void resultFeedback(QString text);
+    void resultReceived(QString text);
 
 private:
     Ui::MainWindow *ui;
