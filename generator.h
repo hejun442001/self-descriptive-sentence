@@ -38,17 +38,6 @@ private:
     QStringList templateLines;
     QString templateCountingLine;
     QString templateDetails;
-
-    class deadloopFlagValues {
-    public:
-        deadloopFlagValues()
-        {
-            t = 0;
-            d = 0;
-        }
-        int t,d;
-    };
-
 };
 
 
