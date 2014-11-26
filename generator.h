@@ -22,26 +22,32 @@ signals:
     void resultFeedback(QString);
 
 private:
-    void addBuffer(QString);
     void addString(QString);
-    void delString();
+    void delString(QString);
     QString numberToText(int);
     inline bool isCharChineseLatter(QChar);
+    void numberChanged(int from, int to);
 
-    int charCounter;
-    QString buffer;
-    QChar addingChar;
-    int addingCharCounter;
-    QString deletingString;
+    int totalCharCounter;
 
-    typedef QMap<QChar,int>::iterator TableIterator;
-    QMap<QChar,int> table;
+    typedef QMap<QChar,int>::iterator QMapChIntIterator;
+    QMap<QChar,int> resultMap, workingMap, bufferMap;
 
     QChar unitChar;
     QStringList templateLeadingLines;
     QStringList templateLines;
     QString templateCountingLine;
     QString templateDetails;
+
+    class deadloopFlagValues {
+    public:
+        deadloopFlagValues()
+        {
+            t = 0;
+            d = 0;
+        }
+        int t,d;
+    };
 
 };
 
