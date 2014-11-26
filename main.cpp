@@ -8,7 +8,7 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    QTextCodec::setCodecForLocale(QTextCodec::codecForName("gb2313"));
+    QTextCodec::setCodecForLocale(QTextCodec::codecForName("utf8"));
     MainWindow w;
     Generator g;
     qsrand(QTime::currentTime().msecsSinceStartOfDay());
