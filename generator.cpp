@@ -19,7 +19,7 @@ void Generator::generate(QString text)
     totalCharCounter = 0;
 
     if (!text.isEmpty()) result << text;
-    result << leadingText << appendText << templateDetails;
+    result << leadingText + appendText << templateDetails;
     text = result.join(QString("，"));
     addString(text);
     totalCharCounter += bufferMap.size() * 3;
@@ -159,12 +159,18 @@ QString Generator::numberToText(int n)
 Generator::Generator() : QObject()
 {
     templateLeadingLines.append("在这句话中");
-    templateLeadingLines.append("本句中");
     templateLeadingLines.append("在此句中");
+    templateLeadingLines.append("在本句中");
+    templateLeadingLines.append("这句话中");
+    templateLeadingLines.append("此句中");
+    templateLeadingLines.append("本句中");
+    templateLeadingLines.append("句中");
 
     templateLines.append("有%1个字");
-    templateLines.append("总计有%1个字");
     templateLines.append("共有%1个字");
+    templateLines.append("总共有%1个字");
+    templateLines.append("共计%1个字");
+    templateLines.append("一共有%1个字");
 
     templateCountingLine="%1个“%2”";
     templateDetails="其中：";
