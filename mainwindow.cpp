@@ -19,7 +19,7 @@ void MainWindow::on_genButton_clicked()
 {
     ui->genButton->setText("生成中……");
     ui->genButton->setEnabled(false);
-    emit generateRequest(ui->inputText->toPlainText());
+    emit generateRequest(ui->inputEdit->text());
 }
 
 void MainWindow::resultReceived(QString text)

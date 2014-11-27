@@ -1,86 +1,80 @@
 #include "generator.h"
-const int LOOP_LIMIT = 1000;
 
 void Generator::generate(QString text)
 {
+    QStringList result;
     if (!text.isEmpty()) {
-        // @todo :: fix it
-        text=text
-                .split(QRegExp("[。！？\\.\\?\\!\\s\\n]{1,}![”]"),QString::SkipEmptyParts)
-                .join("，");
+        text.split(QRegExp("[！？。!?]")).join("，");
     }
-    int leadingTextSelector=qrand()%templateLeadingLines.size();
+    int leadingTextSelector= qrand() % templateLeadingLines.size();
     int appendTextSelector = qrand() % templateLines.size();
     int oldTotalCharCounter;
-
-    bool numberChangedFlag;
+    resultMap.clear();
     QString resultText;
-
     QString leadingText = templateLeadingLines[leadingTextSelector];
     QString appendText = templateLines[appendTextSelector];
-    bufferMap.clear();
-    resultMap.clear();
-    workingMap.clear();
-    oldTotalCharCounter = 0;
-    totalCharCounter = 0;
-    int loopTimes = 0;
+    bool numberChanged;
 
+    bufferMap.clear();
+    totalCharCounter = 0;
+
+    if (!text.isEmpty()) result << text;
+    result << leadingText << appendText << templateDetails;
+    text = result.join(QString("，"));
     addString(text);
-    addString(leadingText);
-    addString(appendText);
-    addString(templateDetails);
+    totalCharCounter += bufferMap.size() * 3;
     addString(numberToText(totalCharCounter));
 
-    while (numberChangedFlag || oldTotalCharCounter != totalCharCounter) {
-        numberChangedFlag = false;
+    int loopTimes = 0;
+    int LOOP_LIMIT = totalCharCounter;
 
-        workingMap = bufferMap;
+    do {
+        resultMap = bufferMap;
+        bufferMap.clear();
 
-        for (QMapChIntIterator it = workingMap.begin();
-             it != workingMap.end(); it++) {
-            QChar key = it.key();
-            int oldValue = resultMap.value(key, 0);
-            int value = workingMap.value(key, 0);
-
-            if (value != oldValue) {
-                numberChanged(oldValue, value);
-                numberChangedFlag = true;
-            }
-        }
-
-        if (oldTotalCharCounter != totalCharCounter) {
-            numberChanged(oldTotalCharCounter, totalCharCounter);
-            oldTotalCharCounter = totalCharCounter;
-            numberChangedFlag = true;
-        }
-
-        resultMap = workingMap;
-
-        QStringList result;
-        if (!text.isEmpty()) result << text;
-        result << leadingText
-               << appendText.arg(numberToText(totalCharCounter))
-               << templateDetails;
-        resultText = result.join("，");
+        resultText = text.arg(numberToText(totalCharCounter));
         result.clear();
-        for(QMapChIntIterator it = resultMap.begin(); it != resultMap.end(); ++it) {
-            if (it.value() > 0)
-                result << templateCountingLine
-                          .arg(numberToText(it.value()))
-                          .arg(it.key());
+        for(CharIntMapIterator it = resultMap.begin();
+            it != resultMap.end(); ++it) {
+            result << templateCountingLine
+                      .arg(numberToText(it.value()))
+                      .arg(it.key());
         }
-
         resultText += result.join("，").append("。");
+
+        oldTotalCharCounter = totalCharCounter;
+        totalCharCounter = 0;
+
+        addString(resultText);
 
         qDebug(qUtf8Printable(resultText));
         if (++loopTimes >= LOOP_LIMIT) {
-           QString feedback = QString("%1次迭代后可能不正确的结果：\n\n")
-                   .arg(LOOP_LIMIT).append(resultText);
-           qDebug(qUtf8Printable("!!! abnormal end !!!\n\n"));
-           emit resultFeedback(feedback);
+            QString feedback = QString("%1次迭代后可能不正确的结果")
+                    .arg(LOOP_LIMIT);
+                    feedback += QString("(此仅用于展示自描述句的格式)：\n\n")
+                    .append(resultText);;
+            qDebug(qUtf8Printable("!!! abnormal end !!!\n\n"));
+            emit resultFeedback(feedback);
            return;
         }
-    }
+
+        numberChanged = false;
+        CharSet resultMapKeys = CharSet::fromList(resultMap.keys());
+        CharSet bufferMapKeys = CharSet::fromList(bufferMap.keys());
+        CharSet totalMapKeys = resultMapKeys + bufferMapKeys;
+        for (CharSet::iterator itor = totalMapKeys.begin();
+             itor != totalMapKeys.end(); ++itor) {
+            if (resultMap.value(*itor, 0) != bufferMap.value(*itor, 0)) {
+                numberChanged = true;
+                break;
+            }
+        }
+
+
+    } while (oldTotalCharCounter != totalCharCounter || numberChanged);
+
+
+
     qDebug(qUtf8Printable("!!! end !!!\n\n"));
     emit resultFeedback(resultText);
 }
@@ -100,49 +94,18 @@ void Generator::addString(QString text)
         QChar ch = text[loop];
         if (isCharChineseLatter(ch)) {
             int value = bufferMap.value(ch, 0);
-            if (value == 0) {
-                bufferMap[ch] = 2;
-                totalCharCounter += 2;
-                addString(unitChar);
-            } else {
-                bufferMap[ch] = value + 1;
-                ++totalCharCounter;
-            }
-        }
-    }
-}
-
-void Generator::delString(QString text)
-{
-    int loop, len = text.length();
-    if (len == 0) return;
-
-    for (loop = 0; loop < len; ++loop) {
-        QChar ch = text[loop];
-        if (isCharChineseLatter(ch)) {
-            int value = bufferMap.value(ch, 0);
-            if (value == 2) {
-                bufferMap.remove(ch);
-                totalCharCounter -= 2;
-                delString(unitChar);
-            } else {
-                bufferMap[ch] = value - 1;
-                totalCharCounter -= 1;
-            }
+            bufferMap[ch] = value + 1;
+            ++totalCharCounter;
         }
     }
 }
 
 QString Generator::numberToText(int n)
 {
-    const QString numberChar = "零一二三四五六七八九";
-    const QString unitChar[] = {"", "十", "百", "千"};
-    const int unitCharCount = 4;
-    const QString groupUnitChar[] = {"", "万", "亿", "兆"};
     QString result;
 
     if (n == 0) {
-        return numberChar[0];
+        return QString(numberChars[0]);
     }
     if (n < 0) {
         result = "负";
@@ -167,15 +130,15 @@ QString Generator::numberToText(int n)
 
         if (digit != 0) {
             if (zeroNeed) {
-                result.append(numberChar[0]);
+                result.append(numberChars[0]);
             }
 
             if (digit != 1 || unit != 1 || ! zeroGroup
                     || (group == 0 && zeroNeed)) {
-                result.append(numberChar[digit]);
+                result.append(numberChars[digit]);
             }
 
-            result.append(unitChar[unit]);
+            result.append(unitChars[unit]);
         }
 
         zeroGroup = zeroGroup && (digit ==0);
@@ -192,25 +155,32 @@ QString Generator::numberToText(int n)
     return result;
 }
 
-void Generator::numberChanged(int from, int to)
-{
-    if (from == to) return;
-    if (from != 0) delString(numberToText(from));
-    if (to != 0) addString(numberToText(to));
-}
-
 Generator::Generator() : QObject()
 {
     templateLeadingLines.append("在这句话中");
     templateLeadingLines.append("本句中");
     templateLeadingLines.append("在此句中");
 
-    templateLines.append("共有%1个汉字");
-    templateLines.append("总计有%1个汉字");
-    templateLines.append("一共有%1个汉字");
+    templateLines.append("有%1个字");
+    templateLines.append("总计有%1个字");
+    templateLines.append("共有%1个字");
 
     templateCountingLine="%1个“%2”";
     templateDetails="其中：";
     unitChar = QString("个")[0];
+
+
+    negitiveChar = "负";
+    numberChars = "零一二三四五六七八九";
+    specialLoopChars = negitiveChar+numberChars;
+
+    QString _unitChars[] = {"", "十", "百", "千"};
+    unitCharCount = 4;
+    QString _groupUnitChar[] = {"", "万", "亿", "兆"};
+    for (int iLoop = 1; iLoop < unitCharCount; ++iLoop) {
+        unitChars[iLoop] = _unitChars[iLoop];
+        groupUnitChar[iLoop] = _groupUnitChar[iLoop];
+        specialLoopChars += _unitChars[iLoop] + _groupUnitChar[iLoop];
+    }
 }
 

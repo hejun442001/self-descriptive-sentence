@@ -6,6 +6,7 @@
 #include <QStringList>
 #include <QMap>
 #include <QChar>
+#include <QSet>
 
 
 class Generator : public QObject
@@ -23,21 +24,27 @@ signals:
 
 private:
     void addString(QString);
-    void delString(QString);
     QString numberToText(int);
     inline bool isCharChineseLatter(QChar);
-    void numberChanged(int from, int to);
 
     int totalCharCounter;
 
-    typedef QMap<QChar,int>::iterator QMapChIntIterator;
-    QMap<QChar,int> resultMap, workingMap, bufferMap;
+    typedef QMap<QChar,int>::iterator CharIntMapIterator;
+    QMap<QChar,int> resultMap, bufferMap;
+    typedef QSet<QChar> CharSet;
 
     QChar unitChar;
     QStringList templateLeadingLines;
     QStringList templateLines;
     QString templateCountingLine;
     QString templateDetails;
+
+    QString negitiveChar;
+    QString numberChars;
+    int unitCharCount;
+    QString unitChars[4];
+    QString groupUnitChar[4];
+    QString specialLoopChars;
 };
 
 
