@@ -3,9 +3,6 @@
 void Generator::generate(QString text)
 {
     QStringList result;
-    if (!text.isEmpty()) {
-        text.split(QRegExp("[！？。!?]")).join("，");
-    }
     int leadingTextSelector= qrand() % templateLeadingLines.size();
     int appendTextSelector = qrand() % templateLines.size();
     int oldTotalCharCounter;
@@ -13,20 +10,35 @@ void Generator::generate(QString text)
     QString resultText;
     QString leadingText = templateLeadingLines[leadingTextSelector];
     QString appendText = templateLines[appendTextSelector];
+
     bool numberChanged;
+    int loopTimes = 0;
 
     bufferMap.clear();
     totalCharCounter = 0;
 
-    if (!text.isEmpty()) result << text;
+    if (text.contains(QString("。"))
+            || text.contains(QString("？"))
+            || text.contains(QString("！"))) {
+        appendText.replace(QString("句"), QString("段"));
+    } else if (text.endsWith(QString("；"))
+               || text.endsWith(QString("，"))
+               || text.endsWith(QString("。"))
+               || text.endsWith(QString("？"))
+               || text.endsWith(QString("！"))
+               || text.endsWith(QString("”"))) {
+        ; // do nothing
+    } else if (text.contains(QString("；"))) {
+        text.append("；");
+    } else {
+        text.append("，");
+    }
+
     result << leadingText + appendText << templateDetails;
-    text = result.join(QString("，"));
+    text += result.join(QString("，"));
     addString(text);
     totalCharCounter += bufferMap.size() * 3;
     addString(numberToText(totalCharCounter));
-
-    int loopTimes = 0;
-    int LOOP_LIMIT = totalCharCounter;
 
     do {
         resultMap = bufferMap;
@@ -47,17 +59,17 @@ void Generator::generate(QString text)
 
         addString(resultText);
 
-        qDebug(qUtf8Printable(resultText));
-        if (++loopTimes >= LOOP_LIMIT) {
+
+        if (++loopTimes > totalCharCounter) {
             QString feedback = QString("%1次迭代后可能不正确的结果")
-                    .arg(LOOP_LIMIT);
-                    feedback += QString("(此仅用于展示自描述句的格式)：\n\n")
+                    .arg(numberToText(loopTimes));
+            feedback += QString("(此仅用于展示自描述句的格式)：\n\n")
                     .append(resultText);;
             qDebug(qUtf8Printable("!!! abnormal end !!!\n\n"));
             emit resultFeedback(feedback);
-           return;
+            return;
         }
-
+        qDebug(qUtf8Printable(QString("%1").arg(loopTimes)+":"+resultText));
         numberChanged = false;
         if (oldTotalCharCounter == totalCharCounter) {
             CharSet resultMapKeys = CharSet::fromList(resultMap.keys());
