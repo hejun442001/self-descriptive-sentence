@@ -59,17 +59,18 @@ void Generator::generate(QString text)
         }
 
         numberChanged = false;
-        CharSet resultMapKeys = CharSet::fromList(resultMap.keys());
-        CharSet bufferMapKeys = CharSet::fromList(bufferMap.keys());
-        CharSet totalMapKeys = resultMapKeys + bufferMapKeys;
-        for (CharSet::iterator itor = totalMapKeys.begin();
-             itor != totalMapKeys.end(); ++itor) {
-            if (resultMap.value(*itor, 0) != bufferMap.value(*itor, 0)) {
-                numberChanged = true;
-                break;
+        if (oldTotalCharCounter == totalCharCounter) {
+            CharSet resultMapKeys = CharSet::fromList(resultMap.keys());
+            CharSet bufferMapKeys = CharSet::fromList(bufferMap.keys());
+            CharSet totalMapKeys = resultMapKeys + bufferMapKeys;
+            for (CharSet::iterator itor = totalMapKeys.begin();
+                 itor != totalMapKeys.end(); ++itor) {
+                if (resultMap.value(*itor, 0) != bufferMap.value(*itor, 0)) {
+                    numberChanged = true;
+                    break;
+                }
             }
         }
-
 
     } while (oldTotalCharCounter != totalCharCounter || numberChanged);
 
