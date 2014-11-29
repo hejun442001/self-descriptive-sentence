@@ -20,6 +20,6 @@ int main(int argc, char *argv[])
                      &g, &QThread::quit);
 
     w.show();
-	g.start();
+    g.start();
     return a.exec();
 }
