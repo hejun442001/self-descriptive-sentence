@@ -7,6 +7,7 @@
 #include <QMap>
 #include <QChar>
 #include <QSet>
+#include <QTime>
 
 class Generator : public QThread
 {
@@ -26,7 +27,7 @@ private:
     void delString(QString);
     QString numberToText(int);
     inline bool isCharChineseLatter(QChar);
-    bool syncValue(int from, int to);
+    bool syncValue(const int from, const int to, int &moniter);
 
     typedef QSet<QChar> CharSet;
 
@@ -49,21 +50,19 @@ private:
             return map.value(ch, 0);
         }
 
-        inline int addChar(QChar ch)
+        inline void addChar(QChar ch)
         {
             map[ch] = map.value(ch, 0) + 1;
             ++total;
-            return map.value(ch, 0);
         }
 
-        inline int delChar(QChar ch)
+        inline void delChar(QChar ch)
         {
             map[ch] = map.value(ch, 0) - 1;
             --total;
             if (map.value(ch, 0) == 0) {
                 map.remove(ch);
             }
-            return map.value(ch, 0);
         }
 
         inline bool operator == (CharCounter &other)

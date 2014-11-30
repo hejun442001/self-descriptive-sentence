@@ -3,7 +3,6 @@
 #include "generator.h"
 #include <QObject>
 #include <QTextCodec>
-#include <QTime>
 
 int main(int argc, char *argv[])
 {
@@ -16,10 +15,12 @@ int main(int argc, char *argv[])
                      &g, &Generator::generate);
     QObject::connect(&g, &Generator::resultFeedback,
                      &w, &MainWindow::resultReceived);
-    QObject::connect(&a, &QApplication::aboutToQuit,
-                     &g, &QThread::quit);
 
-    w.show();
     g.start();
-    return a.exec();
+    w.show();
+    int ret = a.exec();
+
+    g.quit();
+    g.wait();
+    return ret;
 }
