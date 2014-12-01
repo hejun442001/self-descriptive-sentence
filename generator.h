@@ -8,6 +8,7 @@
 #include <QChar>
 #include <QSet>
 #include <QTime>
+#include <QtMath>
 
 class Generator : public QThread
 {

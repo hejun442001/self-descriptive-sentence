@@ -36,55 +36,73 @@ void Generator::generate(QString text)
 
     text = seedingText.arg("____");
     qDebug(qUtf8Printable("SEEDING:" + text));
-    addString(text);
 
     int limit = 0;
-    int MaxLoop = 1;
-    for (; limit <= MaxLoop &&
-         (oldCounter != prevCounter || prevCounter != resultCounter);
-         ++limit) {
-        MaxLoop = qMax(MaxLoop, resultCounter.total);
+    int MaxLoop = text.length();
+    for ( ; limit <= text.length() || (limit <= MaxLoop &&
+         (oldCounter != prevCounter || prevCounter != resultCounter));
+          ++limit) {
 
-        QStringList feedbacks;
+        QChar addingChar;
+
         oldCounter = CharCounter(prevCounter);
         prevCounter = CharCounter(resultCounter);
+
+        QString feedback = QString("%1/%2:").arg(limit).arg(MaxLoop);
+
+        MaxLoop = qMax(MaxLoop, qFloor(10 * qLn(resultCounter.total)));
+        if (limit < text.length()) {
+            addingChar = text[limit];
+            if (limit < text.length() && isCharChineseLatter(addingChar)) {
+                addString(addingChar);
+
+            }
+        }
+
+        if (!syncValue(oldCounter.total, prevCounter.total,
+                       resultCounter.total)) {
+
+            feedback +=QString("TC(%1->%2:%3)")
+                    .arg(oldCounter.total)
+                    .arg(prevCounter.total)
+                    .arg(resultCounter.total);
+        } else {
+            feedback += QString("(TC:%1)")
+                    .arg(resultCounter.total);
+        }
 
         CharSet keys = oldCounter.map.keys().toSet() +
                 prevCounter.map.keys().toSet() +
                 resultCounter.map.keys().toSet();
         for (CharSet::iterator itor = keys.begin();
              itor != keys.end(); ++itor) {
+            QChar key = *itor;
+            int oldValue = oldCounter.value(key);
+            int value = prevCounter.value(*itor);
+            int &monitor = resultCounter.map[key];
 
+            if (!syncValue(oldValue, value, monitor)) {
+                if (oldValue == 0 && value != 0 && monitor != 0) {
+                    QString tmp = templateCountingLine
+                            .arg(value).arg(key);
+                    addString(tmp);
+                }
 
-            if (!syncValue(oldCounter.value(*itor),
-                          prevCounter.value(*itor),
-                          resultCounter.map[*itor])) {
-
-                feedbacks += QString("%1:(%2->%3=%4)")
-                                      .arg(*itor)
-                                      .arg(oldCounter.value(*itor))
-                                      .arg(prevCounter.value(*itor))
-                                      .arg(resultCounter.value(*itor));
+                if (value != monitor) {
+                    feedback += QString(",%1(%2->%3:%4)")
+                            .arg(key).arg(oldValue)
+                            .arg(value).arg(monitor);
+                } else {
+                    feedback += QString(",%1:%2->%3")
+                            .arg(key).arg(oldValue)
+                            .arg(value);
+                }
             } else {
-                feedbacks += QString("%1=%2").arg(*itor).arg(resultCounter.value(*itor));
+                feedback += QString(",%1=%2").arg(key).arg(monitor);
             }
         }
 
-        if (!syncValue(oldCounter.total, prevCounter.total,
-                      resultCounter.total)) {
-
-            qDebug(qUtf8Printable(QString("%1-TC(%2->%3=%4)-%5")
-                                  .arg(limit + 1)
-                                  .arg(oldCounter.total)
-                                  .arg(prevCounter.total)
-                                  .arg(resultCounter.total)
-                                  .arg(feedbacks.join(","))));
-        } else {
-            qDebug(qUtf8Printable(QString("%1-TC：%2-%3")
-                                  .arg(limit + 1)
-                                  .arg(resultCounter.total)
-                                  .arg(feedbacks.join(","))));
-        }
+        qDebug(qUtf8Printable(feedback));
     }
 
     QString feedback = resultText(resultCounter);
@@ -130,12 +148,6 @@ void Generator::addString(QString text)
         QChar ch = text[loop];
         if (isCharChineseLatter(ch)) {
             resultCounter.addChar(ch);
-            if (resultCounter.value(ch) == 1) {
-                QString tmp = templateCountingLine
-                        .arg(QString()).arg(ch);
-                addString(tmp);
-            }
-
         }
     }
 }
