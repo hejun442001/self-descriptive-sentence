@@ -2,7 +2,7 @@
 
 Generator::Generator() : QThread()
 {
-    templateLeadingLine = QString("这个句子是神奇的自计数句，句中子");
+    templateLeadingLine = QString("这句话是神奇的自计数句，句中");
 
     templateAppendingLine = QString("一共有%1个字");
 
@@ -34,50 +34,78 @@ void Generator::generate(QString text)
     prevCounter.clear();
     oldCounter.clear();
 
-    text = seedingText.arg("_______");
+    text = seedingText.arg("____");
     qDebug(qUtf8Printable("SEEDING:" + text));
 
-
     int limit = 0;
-    int MaxLoop = 2;
-    oldCounter.total = 1;
-    for ( ; limit <= MaxLoop &&
-         (oldCounter != prevCounter || prevCounter != resultCounter);
+    int MaxLoop = text.length();
+    for ( ; limit <= text.length() || (limit <= MaxLoop &&
+         (oldCounter != prevCounter || prevCounter != resultCounter));
           ++limit) {
+
+        QChar addingChar;
+
         oldCounter = CharCounter(prevCounter);
         prevCounter = CharCounter(resultCounter);
 
-        MaxLoop = qMax(text.length(), resultCounter.total) * 2 + 1;
         QString feedback = QString("%1/%2:").arg(limit).arg(MaxLoop);
 
-        if (limit == 0) {
-            addString(text);
+        MaxLoop = qMax(MaxLoop, qFloor(10 * qLn(resultCounter.total)));
+        if (limit < text.length()) {
+            addingChar = text[limit];
+            if (limit < text.length() && isCharChineseLatter(addingChar)) {
+                addString(addingChar);
+
+            }
         }
 
         if (!syncValue(oldCounter.total, prevCounter.total,
                        resultCounter.total)) {
 
-            feedback +=QString("TOTAL(%1->%2:%3)")
+            feedback +=QString("TC(%1->%2:%3)")
                     .arg(oldCounter.total)
                     .arg(prevCounter.total)
                     .arg(resultCounter.total);
         } else {
-            feedback += QString("TOTAL:%1")
+            feedback += QString("(TC:%1)")
                     .arg(resultCounter.total);
         }
 
+        CharSet keys = oldCounter.map.keys().toSet() +
+                prevCounter.map.keys().toSet() +
+                resultCounter.map.keys().toSet();
+        for (CharSet::iterator itor = keys.begin();
+             itor != keys.end(); ++itor) {
+            QChar key = *itor;
+            int oldValue = oldCounter.value(key);
+            int value = prevCounter.value(*itor);
+            int &monitor = resultCounter.map[key];
 
+            if (!syncValue(oldValue, value, monitor)) {
+                if (oldValue == 0 && value != 0 && monitor != 0) {
+                    QString tmp = templateCountingLine
+                            .arg(value).arg(key);
+                    addString(tmp);
+                }
 
-        while (!keys.isEmpty())
-            int itor = qrand() % keys.size();
-            QChar key = keys[itor];
-
+                if (value != monitor) {
+                    feedback += QString(",%1(%2->%3:%4)")
+                            .arg(key).arg(oldValue)
+                            .arg(value).arg(monitor);
+                } else {
+                    feedback += QString(",%1:%2->%3")
+                            .arg(key).arg(oldValue)
+                            .arg(value);
+                }
+            } else {
+                feedback += QString(",%1=%2").arg(key).arg(monitor);
+            }
         }
 
         qDebug(qUtf8Printable(feedback));
     }
 
-    QString feedback = resultText(resultCounter) + "\n";
+    QString feedback = resultText(resultCounter);
     qDebug(qUtf8Printable("RESULT:"+feedback));
     if (oldCounter != prevCounter || prevCounter != resultCounter) {
         QString prepend = QString("      抱歉！\n");
@@ -90,14 +118,13 @@ void Generator::generate(QString text)
         QString timesLine = QString("第%1次：\n");
         prepend += timesLine.arg(numberToText(limit));
         feedback.prepend(prepend);
-
         if (limit > 1) {
             feedback += timesLine.arg(numberToText(limit - 1));
-            feedback += resultText(prevCounter) + "\n";
+            feedback += resultText(prevCounter);
         }
         if (limit > 2) {
             feedback += timesLine.arg(numberToText(limit - 2));
-            feedback += resultText(oldCounter) + "\n";
+            feedback += resultText(oldCounter);
         }
         qDebug(qUtf8Printable("!!! failed !!!\n\n"));
     } else {
@@ -218,48 +245,3 @@ QString Generator::resultText(CharCounter &cnt)
     }
     return result.append("。");
 }
-
-inline void Generator::removeMapKey(QChar key)
-{
-        resultCounter.map.remove(key);
-        prevCounter.map.remove(key);
-        oldCounter.map.remove(key);
-}
-
-void syncMap(QChar key)
-{
-    int oldValue = oldCounter.value(key);
-    int value = prevCounter.value(*itor);
-    int &monitor = resultCounter.map[key];
-
-    if (!syncValue(oldValue, value, monitor)) {
-        if (oldValue == 0 && value != 0 && monitor != 0) {
-            QString tmp = templateCountingLine
-                    .arg(numberToText(value))
-                    .arg(key);
-            addString(tmp);
-            feedback += QString(",added:%1(%2->%3:%4)")
-                    .arg(key).arg(oldValue)
-                    .arg(value).arg(monitor);
-        } else if (oldValue == 0 && value == 0 && monitor != 0) {
-            feedback += QString(",peding(%1:%2)").arg(key).arg(monitor);
-        } else if (oldValue != 0 && value == 0 && monitor == 0) {
-            feedback += QString(",deleted(%1:%2)").arg(key).arg(oldValue);
-        } else if (value != monitor) {
-            feedback += QString(",%1(%2->%3:%4)")
-                    .arg(key).arg(oldValue)
-                    .arg(value).arg(monitor);
-        } else {
-            feedback += QString(",%1(%2->%3)")
-                    .arg(key).arg(oldValue)
-                    .arg(value);
-        }
-    } else {
-        if (monitor == 0) {
-            removeMapKey(key);
-            feedback += QString(",LEAKED(%1)").arg(key);
-        } else {
-            feedback += QString(",%1=%2").arg(key).arg(monitor);
-        }
-
-    }

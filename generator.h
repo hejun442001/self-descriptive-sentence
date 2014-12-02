@@ -53,21 +53,17 @@ private:
 
         inline void addChar(QChar ch)
         {
-            Q_ASSERT_X (map.value(ch, 0) >= 0,
-                        "CharCounter::addChar()",
-                        qUtf8Printable(QString("%1:%2")
-                                       .arg(ch).arg(map.value(ch, 0))));
             map[ch] = map.value(ch, 0) + 1;
             ++total;
         }
 
         inline void delChar(QChar ch)
         {
-            Q_ASSERT_X (map.value(ch, 0) > 0, "CharCounter::delChar()",
-                        qUtf8Printable(QString("%1:%2")
-                                       .arg(ch).arg(map.value(ch, 0))));
             map[ch] = map.value(ch, 0) - 1;
             --total;
+            if (map.value(ch, 0) == 0) {
+                map.remove(ch);
+            }
         }
 
         inline bool operator == (CharCounter &other)
@@ -84,7 +80,6 @@ private:
 
     CharCounter resultCounter, prevCounter, oldCounter;
     inline QString resultText(CharCounter& cnt);
-    inline void removeMapKey(QChar key);
 
     QChar unitChar;
     QString templateLeadingLine;
